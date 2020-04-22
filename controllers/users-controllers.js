@@ -20,7 +20,7 @@ const signup = async (req, res, next) => {
   if (!errors.isEmpty()) {
     return next(new HttpError('Invalid inputs passed', 422));
   }
-  const { name, email, password, places } = req.body;
+  const { name, email, password } = req.body;
 
   let existingUser;
   try {
@@ -40,7 +40,7 @@ const signup = async (req, res, next) => {
     image:
       'https://avatars0.githubusercontent.com/u/50333588?s=400&u=23186af7f5f0c0ce5595b0b1e3f6e4ae536d4808&v=4',
     password,
-    places,
+    places: [],
   });
 
   try {
