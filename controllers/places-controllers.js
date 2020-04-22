@@ -1,9 +1,11 @@
 const uuid = require('uuid/v4');
 const { validationResult } = require('express-validator');
+const mongoose = require('mongoose');
 
 const HttpError = require('../models/http-error');
 const getCoordsForAddress = require('../util/location');
 const Place = require('../models/place');
+const User = require('../models/user');
 
 let DUMMY_PLACES = [
   {
@@ -83,8 +85,30 @@ const createPlace = async (req, res, next) => {
       'https://upload.wikimedia.org/wikipedia/commons/3/38/Chicago_montage1.jpg',
     creator,
   });
+
+  let user;
   try {
-    await createdPlace.save();
+    user = await User.findById(creator);
+  } catch (err) {
+    const error = new HttpError('Creating place failed', 500);
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new HttpError('CCould not find user', 404);
+    return next(error);
+  }
+
+  console.log(user);
+
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await createdPlace.save({ session: sess });
+    user.places.push(createdPlace);
+    await user.save({ session: sess });
+    await sess.commitTransaction();
+    //
   } catch (err) {
     const error = new HttpError('Creating place failed', 500);
     return next(error);
